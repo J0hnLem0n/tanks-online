@@ -14,6 +14,7 @@ export default class Player {
         this.id = null;
         this.app = null;
         this.tank = null;
+        this.enemyList = null;
         this.socketService = socketService;
         this.previousPlayerMoveObject = {};
         this.playerMoves = PLAYER_ACTIONS;
@@ -37,12 +38,18 @@ export default class Player {
         return this;
     }
     setup(data) {
-        const {id, xPos, yPos} = data;
+        const { id, xPos, yPos, playersList } = data;
         this.id = id;
+        this.enemyList = new Map(playersList);
+        this.enemyList.delete(this.id);
+        console.log(this.enemyList)
         const setup = ()=> {
             this.tank = new Sprite(resources[tankImage].texture);
             this.tank.x = xPos;
             this.tank.y = yPos;
+            this.tank.scale.x = 0.2;
+            this.tank.scale.y  = 0.2;
+            this.tank.anchor = {x: 0.5, y: 0.5};
             this.app.stage.addChild(this.tank);
         };
         loader
@@ -65,8 +72,11 @@ export default class Player {
                     this.setup(DATA);
                     break;
                 case WS_SERVER_ACTIONS.UPDATE_PLAYERS:
-                    let { yPos } = mapData.get(this.id);
+                    let { xPos, yPos, angle } = mapData.get(this.id);
+                    // console.log(xPos, yPos, angle)
                     this.tank && mapData.get(this.id) ? this.tank.y = yPos : null;
+                    this.tank && mapData.get(this.id) ? this.tank.x = xPos : null;
+                    this.tank && mapData.get(this.id) ? this.tank.rotation = angle : null;
                     break;
                 default:
                     console.info('received: %s', event.data);
@@ -92,21 +102,20 @@ export default class Player {
                     case KEYBOARD_CODES.UP:
                         this.playerMoves.UP = true;
                         this.move();
-                        console.log('UP', this.playerMoves);
                         break;
                     case KEYBOARD_CODES.DOWN:
                         this.playerMoves.DOWN = true;
-                        console.log('DOWN', this.playerMoves);
+                        this.move();
                         break;
                     case KEYBOARD_CODES.RIGHT:
                         this.playerMoves.RIGHT = true;
-                        console.log('RIGHT', this.playerMoves);
+                        this.move();
                         break;
                     case KEYBOARD_CODES.LEFT:
                         this.playerMoves.LEFT = true;
-                        console.log('LEFT', this.playerMoves);
+                        this.move();
                         break;
-                    default: console.log(a.keyCode)
+                    default:
                 }
             }, false
         );
@@ -116,21 +125,20 @@ export default class Player {
                     case KEYBOARD_CODES.UP:
                         this.playerMoves.UP = false;
                         this.move();
-                        console.log('UP', this.playerMoves);
                         break;
                     case KEYBOARD_CODES.DOWN:
                         this.playerMoves.DOWN = false;
-                        console.log('DOWN', this.playerMoves);
+                        this.move();
                         break;
                     case KEYBOARD_CODES.RIGHT:
                         this.playerMoves.RIGHT = false;
-                        console.log('RIGHT', this.playerMoves);
+                        this.move();
                         break;
                     case KEYBOARD_CODES.LEFT:
                         this.playerMoves.LEFT = false;
-                        console.log('LEFT', this.playerMoves);
+                        this.move();
                         break;
-                    default: console.log(a.keyCode)
+                    default:
                 }
             }, false
         );

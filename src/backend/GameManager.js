@@ -10,7 +10,6 @@ const FPS = 60;
 
 export default class GameManager {
     constructor() {
-        this.gameInterval = null;
         this.socketService = new WSService();
         this.playersList = new Map();
     }
@@ -29,7 +28,7 @@ export default class GameManager {
 
             const msg = {
                 ACTION: WS_SERVER_ACTIONS.INITIAL_PLAYER,
-                DATA: player
+                DATA: {...player, playersList: this.playersList}
             };
 
             this.socketService.sentMessageSingleClient(ws, msg)
@@ -51,12 +50,15 @@ export default class GameManager {
         return this;
     }
 
+
     startTicks() {
         setInterval(() => {
             this.playersList.forEach((player, key, myMap) => {
                 /**TODO: Что то странное с координатами, проверить*/
-                player.playerMoves.UP ? player.yPos-- : null;
-                list.set(key, player)
+                player.playerMoves.UP ? player.moveUp() : null;
+                player.playerMoves.DOWN ? player.moveDown() : null;
+                player.playerMoves.LEFT ? player.moveLeft() : null;
+                player.playerMoves.RIGHT ? player.moveRight() : null;
             });
             const msg = {
                 ACTION: WS_SERVER_ACTIONS.UPDATE_PLAYERS,

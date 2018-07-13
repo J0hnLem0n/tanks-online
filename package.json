@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "webpack-dev-server --mode development --port 7001",
+    "start": "webpack-dev-server --mode development --port 7001 --host 172.31.41.62",
     "build": "webpack --mode production",
     "build:dev": "webpack --mode development",
     "server:start": "nodemon --exec babel-node src/backend/index.js"
