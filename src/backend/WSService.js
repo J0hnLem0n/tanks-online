@@ -9,8 +9,13 @@ export default class WSService {
         this.socket = new WebSocket.Server({ port: 7000 });
     }
 
-    sentMessageSingleClient(client, data) {
-        client.send(JSON.stringify(data));
+    sentMessageSingleClient(client, msg) {
+        client.send(JSON.stringify(msg));
+    }
+    sentMessageEveryoneExceptSender(ws, msg) {
+        this.socket.clients.forEach((client)=>{
+            if (client !== ws) client.send(JSON.stringify(msg));
+        })
     }
     sendBroadcastMessage(msg) {
         this.socket.clients.forEach((client)=>{

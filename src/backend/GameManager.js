@@ -30,8 +30,12 @@ export default class GameManager {
                 ACTION: WS_SERVER_ACTIONS.INITIAL_PLAYER,
                 DATA: {...player, playersList: this.playersList}
             };
-
+            const newPlayerMsg = {
+                ACTION: WS_SERVER_ACTIONS.NEW_PLAYER,
+                DATA: player
+            };
             this.socketService.sentMessageSingleClient(ws, msg)
+            this.socketService.sentMessageEveryoneExceptSender(ws, newPlayerMsg)
 
             ws.on('message', (message) => {
                 const msg = JSON.parse(message);

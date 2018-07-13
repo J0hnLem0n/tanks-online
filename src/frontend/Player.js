@@ -92,11 +92,26 @@ export default class Player {
                     this.tank && mapData.get(this.id) ? this.tank.rotation = angle : null;
 
                     this.enemyList.forEach((val, key, map) => {
-                        const { xPos, yPos, angle } = mapData.get(key);
-                        val.sprite.x = xPos;
-                        val.sprite.y = yPos;
-                        val.sprite.rotation = angle;
+                        // console.log(this.enemyList).
+                        if(val.sprite) {
+                            const {xPos, yPos, angle} = mapData.get(key);
+                            val.sprite.x = xPos;
+                            val.sprite.y = yPos;
+                            val.sprite.rotation = angle;
+                        }
                     });
+                    break;
+                case WS_SERVER_ACTIONS.NEW_PLAYER:
+                    /**TODO: get и сразу set как то странно подумать над решением*/
+                    this.enemyList.set(DATA.id, DATA);
+                    let newEnemy = this.enemyList.get(DATA.id);
+                    newEnemy.sprite = new Sprite(resources[tankImage].texture);
+                    newEnemy.sprite.x = xPos;
+                    newEnemy.sprite.y = yPos;
+                    newEnemy.sprite.scale.x = 0.2;
+                    newEnemy.sprite.scale.y  = 0.2;
+                    newEnemy.sprite.anchor = {x: 0.5, y: 0.5};
+                    this.app.stage.addChild(newEnemy.sprite);
                     break;
                 default:
                     console.info('received: %s', event.data);
