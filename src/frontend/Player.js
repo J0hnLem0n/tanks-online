@@ -37,12 +37,15 @@ export default class Player {
         document.body.appendChild(this.app.view);
         return this;
     }
+    initialEnemyList(playersList) {
+        this.enemyList = new Map(playersList);
+        this.enemyList.delete(this.id);
+    }
     setup(data) {
         const { id, xPos, yPos, playersList } = data;
         this.id = id;
-        this.enemyList = new Map(playersList);
-        this.enemyList.delete(this.id);
-        console.log(this.enemyList)
+        this.initialEnemyList(playersList);
+
         const setup = ()=> {
             this.tank = new Sprite(resources[tankImage].texture);
             this.tank.x = xPos;
@@ -51,6 +54,17 @@ export default class Player {
             this.tank.scale.y  = 0.2;
             this.tank.anchor = {x: 0.5, y: 0.5};
             this.app.stage.addChild(this.tank);
+
+            this.enemyList.forEach((val, key, map) => {
+                const { id, xPos, yPos } = val;
+                val.sprite = new Sprite(resources[tankImage].texture);
+                val.sprite.x = xPos;
+                val.sprite.y = yPos;
+                val.sprite.scale.x = 0.2;
+                val.sprite.scale.y  = 0.2;
+                val.sprite.anchor = {x: 0.5, y: 0.5};
+                this.app.stage.addChild(val.sprite);
+            });
         };
         loader
             .add(tankImage)
@@ -73,10 +87,16 @@ export default class Player {
                     break;
                 case WS_SERVER_ACTIONS.UPDATE_PLAYERS:
                     let { xPos, yPos, angle } = mapData.get(this.id);
-                    // console.log(xPos, yPos, angle)
                     this.tank && mapData.get(this.id) ? this.tank.y = yPos : null;
                     this.tank && mapData.get(this.id) ? this.tank.x = xPos : null;
                     this.tank && mapData.get(this.id) ? this.tank.rotation = angle : null;
+
+                    this.enemyList.forEach((val, key, map) => {
+                        const { xPos, yPos, angle } = mapData.get(key);
+                        val.sprite.x = xPos;
+                        val.sprite.y = yPos;
+                        val.sprite.rotation = angle;
+                    });
                     break;
                 default:
                     console.info('received: %s', event.data);
