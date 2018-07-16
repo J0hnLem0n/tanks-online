@@ -2,7 +2,7 @@ import * as PIXI from 'pixi.js'
 import { isEqual } from 'lodash'
 import { PLAYER_ACTIONS, KEYBOARD_CODES, WS_CLIENT_ACTIONS, WS_SERVER_ACTIONS } from '../utils/constants'
 import tankImage from './assests/tank.png'
-import GameManager from "./GameManager";
+import bulletImage from './assests/bullet.png'
 
 const Application = PIXI.Application;
 const loader = PIXI.loader;
@@ -15,6 +15,7 @@ export default class Player {
         this.app = null;
         this.tank = null;
         this.enemyList = null;
+        this.bulletList = new Map();
         this.socketService = socketService;
         this.previousPlayerMoveObject = {};
         this.playerMoves = PLAYER_ACTIONS;
@@ -31,7 +32,8 @@ export default class Player {
                 height: 1024,
                 antialias: true,
                 transparent: false,
-                resolution: 1
+                resolution: 1,
+                forceCanvas: true
             }
         );
         document.body.appendChild(this.app.view);
@@ -68,6 +70,7 @@ export default class Player {
         };
         loader
             .add(tankImage)
+            .add(bulletImage)
             .load(setup);
 
         return this;
@@ -78,21 +81,42 @@ export default class Player {
         };
         this.socketService.socket.onmessage = (event) => {
             const { ACTION, DATA } = JSON.parse(event.data);
-            /**TODO: своеобразный подход, проверить new Map([...DATA])*/
-            const mapData = new Map([...DATA])
 
             switch(ACTION) {
                 case WS_SERVER_ACTIONS.INITIAL_PLAYER:
                     this.setup(DATA);
                     break;
                 case WS_SERVER_ACTIONS.UPDATE_PLAYERS:
-                    let { xPos, yPos, angle } = mapData.get(this.id);
+                    /**TODO: своеобразный подход, проверить new Map([...DATA])*/
+                    const mapData = new Map([...DATA]);
+                    let { xPos, yPos, angle, bulletList } = mapData.get(this.id);
                     this.tank && mapData.get(this.id) ? this.tank.y = yPos : null;
                     this.tank && mapData.get(this.id) ? this.tank.x = xPos : null;
                     this.tank && mapData.get(this.id) ? this.tank.rotation = angle : null;
 
+                    /** Пока какое то костыльное решение*/
+                    const bullets = new Map([...bulletList]);
+                    bullets.forEach((val, key, map) => {
+                        if (!this.bulletList.get(key)) {
+                            val.sprite = new Sprite(resources[bulletImage].texture);
+                            val.sprite.x = xPos;
+                            val.sprite.y = yPos;
+                            val.sprite.anchor = {x: 0.5, y: 0.5};
+                            this.app.stage.addChild(val.sprite);
+
+                            this.bulletList.set(key, val);
+                            console.log(this.bulletList)
+                        }
+                        else {
+                            const bullet = this.bulletList.get(key);
+                            bullet.sprite.x = bullets.get(key).xPos;
+                            bullet.sprite.y = bullets.get(key).yPos;
+                            bullet.sprite.rotation = bullets.get(key).angle;
+                        };
+                    });
+                    // console.log(bullets)
+
                     this.enemyList.forEach((val, key, map) => {
-                        // console.log(this.enemyList).
                         if(val.sprite) {
                             const {xPos, yPos, angle} = mapData.get(key);
                             val.sprite.x = xPos;
@@ -102,7 +126,7 @@ export default class Player {
                     });
                     break;
                 case WS_SERVER_ACTIONS.NEW_PLAYER:
-                    /**TODO: get и сразу set как то странно подумать над решением*/
+                    /**TODO: get и сразу set как то странно подумать над решением, может set уже возвращает*/
                     this.enemyList.set(DATA.id, DATA);
                     let newEnemy = this.enemyList.get(DATA.id);
                     newEnemy.sprite = new Sprite(resources[tankImage].texture);
@@ -127,6 +151,14 @@ export default class Player {
             SENDER_ID: this.id,
             ACTION: WS_CLIENT_ACTIONS.CLIENT_MOVE,
             DATA: this.playerMoves
+        };
+        this.socketService.sendMessage(msg)
+    }
+    shot(event) {
+        const msg = {
+            SENDER_ID: this.id,
+            ACTION: WS_CLIENT_ACTIONS.CLIENT_SHOT,
+            DATA: event
         };
         this.socketService.sendMessage(msg)
     }
@@ -176,6 +208,12 @@ export default class Player {
                     default:
                 }
             }, false
+        );
+        window.addEventListener(
+            "click", event => {
+                this.shot(event)
+            },
+            false
         );
         return this;
     }

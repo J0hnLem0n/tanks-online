@@ -44,7 +44,11 @@ export default class GameManager {
                 switch (ACTION) {
                     case WS_CLIENT_ACTIONS.CLIENT_MOVE:
                         /**TODO: позырить как покрасивее работать с Map :) */
-                        this.playersList.get(SENDER_ID) ? this.playersList.get(SENDER_ID).playerMoves =  DATA : null
+                        this.playersList.get(SENDER_ID) ? this.playersList.get(SENDER_ID).playerMoves =  DATA : null;
+                        break;
+                    case WS_CLIENT_ACTIONS.CLIENT_SHOT:
+                        /**TODO: позырить как покрасивее работать с Map :) */
+                        this.playersList.get(SENDER_ID) ? this.playersList.get(SENDER_ID).shoot() : null;
                         break;
                     default:
                         console.log('received: %s', message);
@@ -58,11 +62,13 @@ export default class GameManager {
     startTicks() {
         setInterval(() => {
             this.playersList.forEach((player, key, myMap) => {
-                /**TODO: Что то странное с координатами, проверить*/
+                /**TODO: Что то странное с координатами, проверить
+                 * Плюс возможно перенести в case WS_CLIENT_ACTIONS.CLIENT_MOVE*/
                 player.playerMoves.UP ? player.moveUp() : null;
                 player.playerMoves.DOWN ? player.moveDown() : null;
                 player.playerMoves.LEFT ? player.moveLeft() : null;
                 player.playerMoves.RIGHT ? player.moveRight() : null;
+                player.updateBullets()
             });
             const msg = {
                 ACTION: WS_SERVER_ACTIONS.UPDATE_PLAYERS,

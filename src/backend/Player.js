@@ -1,4 +1,5 @@
 import {PLAYER_ACTIONS} from "../utils/constants";
+import Bullet from '../backend/Bullet'
 
 export default class Player {
     constructor(id) {
@@ -7,11 +8,12 @@ export default class Player {
         this.angle = 0;
         this.maxSpeed = 2;
         this.maxSpeedAngle = 5;
+        this.maxSpeedBullet = 1;
         /**TODO: Подумать куда лучше запихнуть id тут или на клиенте*/
         this.id = id;
         this.playerMoves = PLAYER_ACTIONS;
+        this.bulletList = new Map();
     }
-    /**Умножаем и делим на 100 для угол для pixi :( */
     moveUp() {
         this.xPos += this.maxSpeed * Math.sin(this.angle);
         this.yPos -= this.maxSpeed * Math.cos(this.angle);
@@ -25,5 +27,18 @@ export default class Player {
     moveDown() {
         this.xPos -= this.maxSpeed * Math.sin(this.angle);
         this.yPos += this.maxSpeed * Math.cos(this.angle);
+    }
+    shoot() {
+        const bullet = new Bullet();
+        bullet.angle = this.angle;
+        bullet.xPos = this.xPos;
+        bullet.yPos = this.yPos;
+        this.bulletList.set(bullet.id, bullet)
+    }
+    updateBullets() {
+        this.bulletList.forEach((bullet, key, myMap) => {
+            bullet.xPos += this.maxSpeedBullet;
+            bullet.yPos += this.maxSpeedBullet;
+        });
     }
 }
