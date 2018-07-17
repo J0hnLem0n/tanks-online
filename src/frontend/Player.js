@@ -4,6 +4,8 @@ import { PLAYER_ACTIONS, KEYBOARD_CODES, WS_CLIENT_ACTIONS, WS_SERVER_ACTIONS } 
 import tankImage from './assests/tank.png'
 import bulletImage from './assests/bullet.png'
 
+import { get } from 'lodash'
+
 const Application = PIXI.Application;
 const loader = PIXI.loader;
 const resources = loader.resources;
@@ -14,8 +16,8 @@ export default class Player {
         this.id = null;
         this.app = null;
         this.tank = null;
-        this.enemyList = null;
-        this.bulletList = new Map();
+        this.playerList = new Map();
+        // this.bulletList = new Map();
         this.socketService = socketService;
         this.previousPlayerMoveObject = {};
         this.playerMoves = PLAYER_ACTIONS;
@@ -39,25 +41,28 @@ export default class Player {
         document.body.appendChild(this.app.view);
         return this;
     }
-    initialEnemyList(playersList) {
-        this.enemyList = new Map(playersList);
-        this.enemyList.delete(this.id);
+    initialPlayerList(playersList) {
+        this.playerList = new Map(playersList);
+        this.playerList.forEach((player, playerKey, playerMap) => {
+            console.log(player.bulletList)
+            player.bulletList = new Map ()
+        });
     }
     setup(data) {
         const { id, xPos, yPos, playersList } = data;
         this.id = id;
-        this.initialEnemyList(playersList);
+        this.initialPlayerList(playersList);
 
         const setup = ()=> {
-            this.tank = new Sprite(resources[tankImage].texture);
-            this.tank.x = xPos;
-            this.tank.y = yPos;
-            this.tank.scale.x = 0.2;
-            this.tank.scale.y  = 0.2;
-            this.tank.anchor = {x: 0.5, y: 0.5};
-            this.app.stage.addChild(this.tank);
+            // this.tank = new Sprite(resources[tankImage].texture);
+            // this.tank.x = xPos;
+            // this.tank.y = yPos;
+            // this.tank.scale.x = 0.2;
+            // this.tank.scale.y  = 0.2;
+            // this.tank.anchor = {x: 0.5, y: 0.5};
+            // this.app.stage.addChild(this.tank);
 
-            this.enemyList.forEach((val, key, map) => {
+            this.playerList.forEach((val, key, map) => {
                 const { id, xPos, yPos } = val;
                 val.sprite = new Sprite(resources[tankImage].texture);
                 val.sprite.x = xPos;
@@ -90,45 +95,50 @@ export default class Player {
                     /**TODO: своеобразный подход, проверить new Map([...DATA])*/
                     const mapData = new Map([...DATA]);
                     let { xPos, yPos, angle, bulletList } = mapData.get(this.id);
-                    this.tank && mapData.get(this.id) ? this.tank.y = yPos : null;
-                    this.tank && mapData.get(this.id) ? this.tank.x = xPos : null;
-                    this.tank && mapData.get(this.id) ? this.tank.rotation = angle : null;
+                    // this.tank && mapData.get(this.id) ? this.tank.y = yPos : null;
+                    // this.tank && mapData.get(this.id) ? this.tank.x = xPos : null;
+                    // this.tank && mapData.get(this.id) ? this.tank.rotation = angle : null;
 
-                    /** Пока какое то костыльное решение*/
-                    const bullets = new Map([...bulletList]);
-                    bullets.forEach((val, key, map) => {
-                        if (!this.bulletList.get(key)) {
-                            val.sprite = new Sprite(resources[bulletImage].texture);
-                            val.sprite.x = xPos;
-                            val.sprite.y = yPos;
-                            val.sprite.anchor = {x: 0.5, y: 0.5};
-                            this.app.stage.addChild(val.sprite);
 
-                            this.bulletList.set(key, val);
-                            console.log(this.bulletList)
-                        }
-                        else {
-                            const bullet = this.bulletList.get(key);
-                            bullet.sprite.x = bullets.get(key).xPos;
-                            bullet.sprite.y = bullets.get(key).yPos;
-                            bullet.sprite.rotation = bullets.get(key).angle;
-                        };
-                    });
                     // console.log(bullets)
 
-                    this.enemyList.forEach((val, key, map) => {
-                        if(val.sprite) {
-                            const {xPos, yPos, angle} = mapData.get(key);
-                            val.sprite.x = xPos;
-                            val.sprite.y = yPos;
-                            val.sprite.rotation = angle;
+                    this.playerList.forEach((player, playerKey, playerMap) => {
+                        if(player.sprite) {
+                            const {xPos, yPos, angle, bulletList} = mapData.get(playerKey);
+                            player.sprite.x = xPos;
+                            player.sprite.y = yPos;
+
+                            player.sprite.rotation = angle;
+
+                            /** Пока какое то костыльное решение*/
+                            const bullets = new Map([...bulletList]);
+                            bullets.forEach((bullet, bulletKey, map) => {
+                                // const playerList = this.playerList.get(playerKey);
+                                const existBullet = player.bulletList.get(bulletKey);
+                                console.log()
+                                if (get(existBullet, 'sprite')) {
+                                    existBullet.sprite.x = bullets.get(bulletKey).xPos;
+                                    existBullet.sprite.y = bullets.get(bulletKey).yPos;
+                                    existBullet.sprite.rotation = bullets.get(bulletKey).angle;
+                                }
+                                else {
+                                    bullet.sprite = new Sprite(resources[bulletImage].texture);
+                                    bullet.sprite.x = xPos;
+                                    bullet.sprite.y = yPos;
+                                    bullet.sprite.anchor = {x: 0.5, y: 0.5};
+                                    this.app.stage.addChild(bullet.sprite);
+
+                                    player.bulletList.set(bulletKey, bullet);
+                                    console.log(this.bulletList)
+                                };
+                            });
                         }
                     });
                     break;
                 case WS_SERVER_ACTIONS.NEW_PLAYER:
                     /**TODO: get и сразу set как то странно подумать над решением, может set уже возвращает*/
-                    this.enemyList.set(DATA.id, DATA);
-                    let newEnemy = this.enemyList.get(DATA.id);
+                    this.playerList.set(DATA.id, DATA);
+                    let newEnemy = this.playerList.get(DATA.id);
                     newEnemy.sprite = new Sprite(resources[tankImage].texture);
                     newEnemy.sprite.x = xPos;
                     newEnemy.sprite.y = yPos;
