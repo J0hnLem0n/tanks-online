@@ -43,8 +43,8 @@ export default class Player {
     }
     initialPlayerList(playersList) {
         this.playerList = new Map(playersList);
+        /**TODO как то костыльно добавлять тут bulletList*/
         this.playerList.forEach((player, playerKey, playerMap) => {
-            console.log(player.bulletList)
             player.bulletList = new Map ()
         });
     }
@@ -54,14 +54,6 @@ export default class Player {
         this.initialPlayerList(playersList);
 
         const setup = ()=> {
-            // this.tank = new Sprite(resources[tankImage].texture);
-            // this.tank.x = xPos;
-            // this.tank.y = yPos;
-            // this.tank.scale.x = 0.2;
-            // this.tank.scale.y  = 0.2;
-            // this.tank.anchor = {x: 0.5, y: 0.5};
-            // this.app.stage.addChild(this.tank);
-
             this.playerList.forEach((val, key, map) => {
                 const { id, xPos, yPos } = val;
                 val.sprite = new Sprite(resources[tankImage].texture);
@@ -95,13 +87,6 @@ export default class Player {
                     /**TODO: своеобразный подход, проверить new Map([...DATA])*/
                     const mapData = new Map([...DATA]);
                     let { xPos, yPos, angle, bulletList } = mapData.get(this.id);
-                    // this.tank && mapData.get(this.id) ? this.tank.y = yPos : null;
-                    // this.tank && mapData.get(this.id) ? this.tank.x = xPos : null;
-                    // this.tank && mapData.get(this.id) ? this.tank.rotation = angle : null;
-
-
-                    // console.log(bullets)
-
                     this.playerList.forEach((player, playerKey, playerMap) => {
                         if(player.sprite) {
                             const {xPos, yPos, angle, bulletList} = mapData.get(playerKey);
@@ -113,7 +98,6 @@ export default class Player {
                             /** Пока какое то костыльное решение*/
                             const bullets = new Map([...bulletList]);
                             bullets.forEach((bullet, bulletKey, map) => {
-                                // const playerList = this.playerList.get(playerKey);
                                 const existBullet = player.bulletList.get(bulletKey);
                                 console.log()
                                 if (get(existBullet, 'sprite')) {
@@ -145,6 +129,8 @@ export default class Player {
                     newEnemy.sprite.scale.x = 0.2;
                     newEnemy.sprite.scale.y  = 0.2;
                     newEnemy.sprite.anchor = {x: 0.5, y: 0.5};
+                    /**TODO как то костыльно добавлять тут bulletList*/
+                    newEnemy.bulletList = new Map ()
                     this.app.stage.addChild(newEnemy.sprite);
                     break;
                 default:

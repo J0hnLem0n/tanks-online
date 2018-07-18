@@ -8,7 +8,7 @@ export default class Player {
         this.angle = 0;
         this.maxSpeed = 2;
         this.maxSpeedAngle = 5;
-        this.maxSpeedBullet = 1;
+        this.maxSpeedBullet = 10;
         /**TODO: Подумать куда лучше запихнуть id тут или на клиенте*/
         this.id = id;
         this.playerMoves = PLAYER_ACTIONS;
@@ -37,8 +37,8 @@ export default class Player {
     }
     updateBullets() {
         this.bulletList.forEach((bullet, key, myMap) => {
-            bullet.xPos += this.maxSpeedBullet;
-            bullet.yPos += this.maxSpeedBullet;
+            bullet.xPos += this.maxSpeedBullet * Math.sin(bullet.angle);
+            bullet.yPos -= this.maxSpeedBullet * Math.cos(bullet.angle);
         });
     }
 }
