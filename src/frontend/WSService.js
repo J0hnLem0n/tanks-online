@@ -1,4 +1,4 @@
-const CONNECTION_SOCKET_URL = 'ws://localhost:7000/ws'
+const CONNECTION_SOCKET_URL = 'ws://localhost:3001/ws'
 
 export default class WSService {
     constructor(socket) {

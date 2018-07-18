@@ -6,7 +6,7 @@ const guid = require('uuid/v1');
 export default class WSService {
     constructor() {
         /**Прокинуть порт в константы*/
-        this.socket = new WebSocket.Server({ port: 7000 });
+        this.socket = new WebSocket.Server({ port: 3001 });
     }
 
     sentMessageSingleClient(client, msg) {
